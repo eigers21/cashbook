@@ -1486,12 +1486,21 @@
       querySnapshot.forEach(doc => {
         records.push({ id: doc.id, ...doc.data() });
       });
-      // クライアント側で日付順にソート（インデックス不要のため）
-      return records.sort((a, b) => (Number(a.day) || 0) - (Number(b.day) || 0));
+      // クライアント側で日付と時間（タイムスタンプ）順にソート（インデックス不要のため）
+      return records.sort((a, b) => {
+        const dayDiff = (Number(a.day) || 0) - (Number(b.day) || 0);
+        if (dayDiff !== 0) return dayDiff;
+        const aSeconds = a.timestamp ? (a.timestamp.seconds || 0) : 0;
+        const bSeconds = b.timestamp ? (b.timestamp.seconds || 0) : 0;
+        if (aSeconds !== bSeconds) return aSeconds - bSeconds;
+        const aNanos = a.timestamp ? (a.timestamp.nanoseconds || 0) : 0;
+        const bNanos = b.timestamp ? (b.timestamp.nanoseconds || 0) : 0;
+        return aNanos - bNanos;
+      });
     }
 
     async function updateFirestoreRecord(data) {
-      const docRef = doc(db, "transactions", data.id); // index.html側でidを渡すよう微調整が必要
+      const docRef = doc(db, "transactions", data.id);
       await updateDoc(docRef, {
         category: data.category,
         income: data.income,
