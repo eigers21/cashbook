@@ -1300,6 +1300,9 @@
         </div>
         <div class="denomination-list" id="denominationList"></div>
         <button class="vault-save-btn" onclick="saveVaultData()">💾 保存する</button>
+        <button class="vault-save-btn" onclick="migrateFromGas()"
+          style="margin-top:12px; background:rgba(255,193,7,0.15); border-color:rgba(255,193,7,0.3); color:#ffc107;">🔄
+          スプレッドシートから同期</button>
       </div>
     </div>
   </div>
@@ -1513,6 +1516,60 @@
       const d = new Date(parseInt(p[0]), parseInt(p[1]) - 1 + delta, 1);
       return getCurrentMonthId(d);
     }
+
+    // --- データ移行用 (GAS → Firestore) ---
+    const MIGRATION_GAS_URL = 'https://script.google.com/macros/s/AKfycbxZqD_RVIZgH742zfUzucgI9-j700-pUapULWUPjlv0PtSsIkK-_HbUZX9tVNLdyYnPfA/exec';
+
+    window.migrateFromGas = async function () {
+      if (!confirm("スプレッドシートの全データを Firebase に移行しますか？\n(既に移行済みのデータがある場合は重複する可能性があります)")) return;
+      showLoading("データを移行中...");
+      try {
+        // 1. カテゴリの移行
+        const catsRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getCategories' }) });
+        const cats = await catsRes.json();
+        if (cats && Array.isArray(cats)) {
+          await setDoc(doc(db, "settings", "categories"), { items: cats });
+        }
+
+        // 2. 金庫の移行
+        const vaultRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getVault' }) });
+        const vault = await vaultRes.json();
+        if (vault && vault.denominations) {
+          await setDoc(doc(db, "settings", "vault"), { denominations: vault.denominations });
+        }
+
+        // 3. 明細の移行（全月）
+        const monthsRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAvailableMonths' }) });
+        const months = await monthsRes.json();
+
+        for (const m of months) {
+          const recsRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getMonthlyRecords', sheetName: m.name }) });
+          const recs = await recsRes.json();
+          const batch = writeBatch(db);
+          for (const r of recs) {
+            if (r.isCarryOver) continue; // 繰越は計算で出すためスキップ
+            const newDoc = doc(collection(db, "transactions"));
+            batch.set(newDoc, {
+              year: Number(m.name.split('_')[0]),
+              month: m.name,
+              day: Number(r.day),
+              category: r.category,
+              income: Number(r.income) || 0,
+              expense: Number(r.expense) || 0,
+              note: r.note || '',
+              timestamp: serverTimestamp()
+            });
+          }
+          await batch.commit();
+        }
+
+        showToast("移行が完了しました！ページを再読み込みします。", "success");
+        setTimeout(() => location.reload(), 2000);
+      } catch (e) {
+        showToast("移行エラー: " + e.message, "error");
+      }
+      hideLoading();
+    };
 
 
     // ========================================
