@@ -1473,15 +1473,15 @@
     async function getFirestoreMonthlyRecords(monthId) {
       const q = query(
         collection(db, "transactions"),
-        where("month", "==", monthId),
-        orderBy("day", "asc")
+        where("month", "==", monthId)
       );
       const querySnapshot = await getDocs(q);
       const records = [];
       querySnapshot.forEach(doc => {
         records.push({ id: doc.id, ...doc.data() });
       });
-      return records;
+      // クライアント側で日付順にソート（インデックス不要のため）
+      return records.sort((a, b) => (Number(a.day) || 0) - (Number(b.day) || 0));
     }
 
     async function updateFirestoreRecord(data) {
