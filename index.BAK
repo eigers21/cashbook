@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>現金出納帳</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -276,44 +275,10 @@
       margin-bottom: 8px;
     }
 
-    .balance-month-nav {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
     .balance-month {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      min-width: 120px;
-    }
-
-    .nav-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 1px solid var(--border-color);
-      background: var(--bg-card);
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: 12px;
-    }
-
-    .nav-btn:active {
-      transform: scale(0.9);
-      background: var(--bg-card-hover);
-    }
-
-    .nav-btn:disabled {
-      opacity: 0.2;
-      cursor: not-allowed;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
     }
 
     .balance-amount {
@@ -1146,88 +1111,6 @@
     .vault-save-btn:active {
       transform: scale(0.98);
     }
-
-    .settings-page {
-      padding: 8px 16px;
-      padding-bottom: 100px;
-    }
-
-    .settings-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 16px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .settings-info {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .settings-info-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: #fff;
-    }
-
-    .settings-info-desc {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.5);
-      line-height: 1.4;
-    }
-
-    .category-manager {
-      margin-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .category-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .category-chip {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .category-delete {
-      color: #ff5252;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .category-add-form {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .category-input {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 8px 12px;
-      color: #fff;
-      font-size: 14px;
-    }
   </style>
 </head>
 
@@ -1278,11 +1161,7 @@
           <div class="balance-decoration"></div>
           <div class="balance-header">
             <div class="balance-label">差引残高</div>
-            <div class="balance-month-nav">
-              <button class="nav-btn" id="prevMonthBtn" onclick="changeBalanceMonth(1)">◀</button>
-              <div class="balance-month" id="balanceMonth">--</div>
-              <button class="nav-btn" id="nextMonthBtn" onclick="changeBalanceMonth(-1)">▶</button>
-            </div>
+            <div class="balance-month" id="balanceMonth">--</div>
             <div class="balance-amount">
               <span id="balanceAmount">---</span><span class="balance-yen">円</span>
             </div>
@@ -1385,57 +1264,6 @@
         <button class="vault-save-btn" onclick="saveVaultData()">💾 保存する</button>
       </div>
     </div>
-
-    <!-- 設定タブ -->
-    <div class="tab-content" id="tabSettings">
-      <div class="settings-page">
-        <div class="section-title">データ管理・設定</div>
-
-        <div class="settings-card">
-          <div class="settings-info">
-            <div class="settings-info-title">📤 スプレッドシートへ保存</div>
-            <div class="settings-info-desc">アプリ（Firebase）の内容をスプレッドシートに書き出します。</div>
-          </div>
-          <button class="vault-save-btn" onclick="exportToGas()"
-            style="background:rgba(76,175,80,0.15); border-color:rgba(76,175,80,0.3); color:#4caf50;">
-            💾 アプリ ➔ スプシ
-          </button>
-        </div>
-
-        <div class="settings-card" style="margin-top:20px;">
-          <div class="settings-info">
-            <div class="settings-info-title">📥 スプレッドシートから同期</div>
-            <div class="settings-info-desc" style="color:#f44336;">【注意】アプリ側のデータが消え、スプシの内容に置き換わります。</div>
-          </div>
-          <button class="vault-save-btn" onclick="migrateFromGas()"
-            style="background:rgba(244,67,54,0.15); border-color:rgba(244,67,54,0.3); color:#f44336;">
-            🔄 スプシ ➔ アプリ
-          </button>
-        </div>
-
-        <div class="category-manager">
-          <div class="section-title">項目の管理 (支出)</div>
-          <div class="category-list" id="settingsExpenseList"></div>
-          <div class="category-add-form">
-            <input type="text" id="newExpenseName" class="category-input" placeholder="新しい支出項目...">
-            <button class="vault-save-btn" onclick="addCategory('支出')"
-              style="width:auto; padding:8px 16px; margin:0;">追加</button>
-          </div>
-
-          <div class="section-title" style="margin-top:20px;">項目の管理 (収入)</div>
-          <div class="category-list" id="settingsIncomeList"></div>
-          <div class="category-add-form">
-            <input type="text" id="newIncomeName" class="category-input" placeholder="新しい収入項目...">
-            <button class="vault-save-btn" onclick="addCategory('収入')"
-              style="width:auto; padding:8px 16px; margin:0;">追加</button>
-          </div>
-        </div>
-
-        <div class="settings-footer" style="margin-top:40px; font-size:12px; color:#666; text-align:center;">
-          Cashbook v2.0 (Firebase Edition)
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- タブバー -->
@@ -1456,345 +1284,33 @@
       <div class="tab-icon">🏦</div>
       <div class="tab-label">金庫</div>
     </div>
-    <div class="tab-item" onclick="switchTab('settings')" id="tabBarSettings">
-      <div class="tab-icon">🛠</div>
-      <div class="tab-label">設定</div>
-    </div>
   </div>
 
-  <!-- Firebase SDK (Modular) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc,
-      getDocs, query, where, orderBy, deleteDoc, serverTimestamp, writeBatch
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <script>
+    // ========================================
+    // GAS API URL（デプロイ後のURLに書き換えてください）
+    // ========================================
+    const GAS_API_URL = 'YOUR_GAS_WEBAPP_URL_HERE';
 
     // ========================================
-    // Firebase 設定
+    // API通信関数（GAS REST API 用）
     // ========================================
-    const firebaseConfig = {
-      apiKey: "AIzaSyBTXgzdo-F31cGbxmNpQE3NWlJlnSH3xlg",
-      authDomain: "cashbook-a21fe.firebaseapp.com",
-      projectId: "cashbook-a21fe",
-      storageBucket: "cashbook-a21fe.firebasestorage.app",
-      messagingSenderId: "210973369340",
-      appId: "1:210973369340:web:4ab59e9a19716a74fa8879",
-      measurementId: "G-Y9FHZ9EWJ1"
-    };
-
-    // 初期化
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // ========================================
-    // API通信関数（Firestore 移行版）
-    // ========================================
-    window.callApi = async function (action, params) {
+    async function callApi(action, extraParams) {
+      var params = Object.assign({ action: action }, extraParams || {});
       try {
-        switch (action) {
-          case 'getBalance':
-            return await getFirestoreBalance(params ? params.sheetName : null);
-          case 'getCategories':
-            return await getFirestoreCategories();
-          case 'addRecord':
-            return await addFirestoreRecord(params.data);
-          case 'saveVault':
-            return await saveFirestoreVault(params.data);
-          case 'getVault':
-            return await getFirestoreVault();
-          case 'getAvailableMonths':
-            return await getFirestoreAvailableMonths();
-          case 'getMonthlyRecords':
-            return await getFirestoreMonthlyRecords(params.sheetName);
-          case 'updateRecord':
-            return await updateFirestoreRecord(params.data);
-          case 'deleteRecord':
-            return await deleteFirestoreRecord(params.data);
-          default:
-            throw new Error('不明なアクション: ' + action);
-        }
+        var response = await fetch(GAS_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(params),
+          redirect: 'follow'
+        });
+        var result = await response.json();
+        if (result.error) throw new Error(result.error);
+        return result;
       } catch (err) {
-        console.error('Firebase Error:', err);
         throw err;
       }
-    };
-
-    // --- 各アクションの実装 ---
-
-    async function getFirestoreBalance(monthId) {
-      const targetMonth = monthId || getCurrentMonthId();
-
-      // 開始残高（繰越金）の取得
-      let openingBalance = 0;
-      try {
-        const summarySnap = await getDoc(doc(db, "summaries", targetMonth));
-        if (summarySnap.exists()) {
-          openingBalance = Number(summarySnap.data().openingBalance) || 0;
-        }
-      } catch (e) { console.warn("Summary fetch error:", e); }
-
-      const q = query(collection(db, "transactions"), where("month", "==", targetMonth));
-      const querySnapshot = await getDocs(q);
-
-      let income = 0, expense = 0;
-      querySnapshot.forEach((doc) => {
-        const d = doc.data();
-        income += (Number(d.income) || 0);
-        expense += (Number(d.expense) || 0);
-      });
-
-      const balance = openingBalance + income - expense;
-      return { balance, income, expense, month: targetMonth };
     }
-
-    async function getPreviousMonthEndBalance(monthId) {
-      // 繰越金の計算ロジック（将来的に拡張可能。現在は簡易的に 0 を返す）
-      return 0;
-    }
-
-    async function getFirestoreCategories() {
-      const docRef = doc(db, "settings", "categories");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) return docSnap.data().items;
-
-      // 初期データ（Firestoreが空の場合）
-      const defaultCats = [
-        { name: '給料', type: '収入' }, { name: '返金分', type: '収入' }, { name: '生活費＋', type: '収入' },
-        { name: '生活費－', type: '支出' }, { name: '雑費', type: '支出' }, { name: '富士山貯金', type: '支出' }, { name: '食費', type: '支出' }
-      ];
-      await setDoc(docRef, { items: defaultCats });
-      return defaultCats;
-    }
-
-    async function addFirestoreRecord(data) {
-      const now = new Date();
-      const monthId = getCurrentMonthId(now);
-      const record = {
-        year: now.getFullYear(),
-        month: monthId,
-        day: now.getDate(),
-        category: data.category,
-        income: data.type === 'income' ? data.amount : 0,
-        expense: data.type === 'expense' ? data.amount : 0,
-        note: data.note || '',
-        timestamp: serverTimestamp()
-      };
-      await addDoc(collection(db, "transactions"), record);
-      return await getFirestoreBalance(monthId);
-    }
-
-    async function saveFirestoreVault(data) {
-      await setDoc(doc(db, "settings", "vault"), { denominations: data.denominations });
-      return { success: true };
-    }
-
-    async function getFirestoreVault() {
-      const docSnap = await getDoc(doc(db, "settings", "vault"));
-      return docSnap.exists() ? docSnap.data() : { denominations: {} };
-    }
-
-    async function getFirestoreAvailableMonths() {
-      // 本来はインデックスを作るか、monthsコレクションを持つべき
-      // 簡易実装として、transactionsからユニークなmonthを抽出（小規模ならこれでOK）
-      const q = query(collection(db, "transactions"));
-      const querySnapshot = await getDocs(q);
-      const monthsSet = new Set();
-      querySnapshot.forEach(doc => monthsSet.add(doc.data().month));
-
-      const current = getCurrentMonthId();
-      monthsSet.add(current); // 今月は必ず入れる
-
-      return Array.from(monthsSet).sort().reverse().map(m => {
-        const p = m.split('_');
-        return { name: m, label: p[0] + '年 ' + parseInt(p[1]) + '月' };
-      });
-    }
-
-    async function getFirestoreMonthlyRecords(monthId) {
-      const q = query(
-        collection(db, "transactions"),
-        where("month", "==", monthId)
-      );
-      const querySnapshot = await getDocs(q);
-      const records = [];
-      querySnapshot.forEach(doc => {
-        records.push({ id: doc.id, ...doc.data() });
-      });
-      // クライアント側で日付と時間（タイムスタンプ）順にソート（インデックス不要のため）
-      return records.sort((a, b) => {
-        const dayDiff = (Number(a.day) || 0) - (Number(b.day) || 0);
-        if (dayDiff !== 0) return dayDiff;
-        const aSeconds = a.timestamp ? (a.timestamp.seconds || 0) : 0;
-        const bSeconds = b.timestamp ? (b.timestamp.seconds || 0) : 0;
-        if (aSeconds !== bSeconds) return aSeconds - bSeconds;
-        const aNanos = a.timestamp ? (a.timestamp.nanoseconds || 0) : 0;
-        const bNanos = b.timestamp ? (b.timestamp.nanoseconds || 0) : 0;
-        return aNanos - bNanos;
-      });
-    }
-
-    async function updateFirestoreRecord(data) {
-      const docRef = doc(db, "transactions", data.id);
-      await updateDoc(docRef, {
-        category: data.category,
-        income: data.income,
-        expense: data.expense,
-        note: data.note
-      });
-      return { success: true };
-    }
-
-    async function deleteFirestoreRecord(data) {
-      await deleteDoc(doc(db, "transactions", data.id));
-      return { success: true };
-    }
-
-    // --- ヘルパー ---
-    function getCurrentMonthId(date) {
-      const d = date || new Date();
-      return d.getFullYear() + '_' + ('0' + (d.getMonth() + 1)).slice(-2);
-    }
-    function getRelativeMonthId(monthId, delta) {
-      const p = monthId.split('_');
-      const d = new Date(parseInt(p[0]), parseInt(p[1]) - 1 + delta, 1);
-      return getCurrentMonthId(d);
-    }
-
-    // --- データ移行用 (GAS → Firestore) ---
-    const MIGRATION_GAS_URL = 'https://script.google.com/macros/s/AKfycbxZqD_RVIZgH742zfUzucgI9-j700-pUapULWUPjlv0PtSsIkK-_HbUZX9tVNLdyYnPfA/exec';
-
-    /**
-     * プランA: Firebaseからスプレッドシートへ一括書き出し
-     */
-    window.exportToGas = async function () {
-      if (!confirm("【確認】アプリ（Firebase）の内容をスプレッドシートに一括保存します。\n\nスプレッドシートの既存データは全て消去され、アプリの内容で上書きされますが、よろしいですか？")) return;
-
-      showLoading('スプレッドシートへ書き出し中...');
-      try {
-        // 利用可能な月を取得
-        const months = await window.callApi('getAvailableMonths');
-
-        for (const m of months) {
-          showLoading(`${m.label} を保存中...`);
-
-          // Firestoreからその月の全レコードを取得
-          const q = query(collection(db, "transactions"), where("month", "==", m.name));
-          const snap = await getDocs(q);
-          const recs = [];
-          snap.forEach(doc => {
-            const d = doc.data();
-            recs.push({
-              day: d.day,
-              category: d.category,
-              income: d.income,
-              expense: d.expense,
-              note: d.note,
-              timestamp: d.timestamp
-            });
-          });
-
-          // 開始残高を取得
-          let openingBalance = 0;
-          const summarySnap = await getDoc(doc(db, "summaries", m.name));
-          if (summarySnap.exists()) {
-            openingBalance = Number(summarySnap.data().openingBalance) || 0;
-          }
-
-          // カテゴリも一緒に送信 (最初の月のみ代表してマスタを更新)
-          const categories = (await getDoc(doc(db, "settings", "categories"))).data()?.items || [];
-
-          // GASへ一括送信
-          const res = await fetch(MIGRATION_GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-              action: 'bulkSync',
-              data: {
-                sheetName: m.name,
-                transactions: recs,
-                openingBalance: openingBalance,
-                categories: categories // 追加
-              }
-            })
-          });
-          const result = await res.json();
-          if (result.error) throw new Error(result.error);
-        }
-
-        showToast("スプレッドシートへの一括保存が完了しました！", "success");
-      } catch (e) {
-        console.error('Export Error:', e);
-        showToast("保存エラー: " + e.message, "error");
-      }
-      hideLoading();
-    };
-
-    window.migrateFromGas = async function () {
-      if (!confirm("【警告】スプレッドシートの全データをアプリ（Firebase）に同期します。\n\n現在アプリに入力されているデータは全て消去され、スプレッドシートの内容に置き換わります。\n\n本当によろしいですか？")) return;
-      showLoading("データを同期中...");
-      try {
-        // 1. カテゴリの移行
-        const catsRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getCategories' }) });
-        const cats = await catsRes.json();
-        if (cats && Array.isArray(cats)) {
-          await setDoc(doc(db, "settings", "categories"), { items: cats });
-        }
-
-        // 2. 金庫の移行
-        const vaultRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getVault' }) });
-        const vault = await vaultRes.json();
-        if (vault && vault.denominations) {
-          await setDoc(doc(db, "settings", "vault"), { denominations: vault.denominations });
-        }
-
-        // 3. 明細の移行（全月）
-        const monthsRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAvailableMonths' }) });
-        const months = await monthsRes.json();
-
-        for (const m of months) {
-          showLoading(`${m.label} を移行中...`);
-          const recsRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getMonthlyRecords', sheetName: m.name }) });
-          const recs = await recsRes.json();
-
-          // 重複防止: その月の既存データを削除
-          const existingQ = query(collection(db, "transactions"), where("month", "==", m.name));
-          const existingSnap = await getDocs(existingQ);
-          const deleteBatch = writeBatch(db);
-          existingSnap.forEach(d => deleteBatch.delete(d.ref));
-          await deleteBatch.commit();
-
-          const batch = writeBatch(db);
-          let openingBalance = 0;
-          for (const r of recs) {
-            if (r.isCarryOver) {
-              openingBalance = Number(r.balance) || 0;
-              continue;
-            }
-            const newDoc = doc(collection(db, "transactions"));
-            batch.set(newDoc, {
-              year: Number(m.name.split('_')[0]),
-              month: m.name,
-              day: Number(r.day),
-              category: r.category,
-              income: Number(r.income) || 0,
-              expense: Number(r.expense) || 0,
-              note: r.note || '',
-              timestamp: serverTimestamp()
-            });
-          }
-          // 開始残高を保存
-          await setDoc(doc(db, "summaries", m.name), { openingBalance: openingBalance });
-          await batch.commit();
-        }
-
-        showToast("移行が完了しました！ページを再読み込みします。", "success");
-        setTimeout(() => location.reload(), 2000);
-      } catch (e) {
-        showToast("移行エラー: " + e.message, "error");
-      }
-      hideLoading();
-    };
-
 
     // ========================================
     // 状態管理
@@ -1802,198 +1318,87 @@
     var state = {
       type: 'expense', category: '', isCustomCategory: false, amountStr: '',
       categories: [], balance: 0, income: 0, expense: 0, vault: {},
-      selectedMonth: '', currentRecords: [], editingRecord: null,
-      // 明細表示中の月
-      viewingMonth: '', availableMonths: []
+      selectedMonth: '', currentRecords: [], editingRecord: null
     };
     var DENOMINATIONS = [10000, 5000, 1000, 500, 100, 50, 10, 5, 1];
 
     // ========================================
-    // カテゴリ一管理 (設定タブ)
-    // ========================================
-    window.renderCategoryManager = async function () {
-      const catsDoc = await getDoc(doc(db, "settings", "categories"));
-      if (!catsDoc.exists()) return;
-      const cats = catsDoc.data().items || [];
-
-      const expenseList = document.getElementById('settingsExpenseList');
-      const incomeList = document.getElementById('settingsIncomeList');
-      expenseList.innerHTML = '';
-      incomeList.innerHTML = '';
-
-      cats.forEach((cat, index) => {
-        const chip = document.createElement('div');
-        chip.className = 'category-chip';
-        chip.innerHTML = `${cat.name} <span class="category-delete" onclick="deleteCategory(${index})">×</span>`;
-
-        if (cat.type === '支出') expenseList.appendChild(chip);
-        else incomeList.appendChild(chip);
-      });
-    };
-
-    window.addCategory = async function (type) {
-      const inputId = type === '支出' ? 'newExpenseName' : 'newIncomeName';
-      const input = document.getElementById(inputId);
-      const name = input.value.trim();
-      if (!name) return;
-
-      showLoading('項目を追加中...');
-      try {
-        const catsDoc = await getDoc(doc(db, "settings", "categories"));
-        const cats = catsDoc.exists() ? catsDoc.data().items || [] : [];
-        cats.push({ name: name, type: type });
-        await setDoc(doc(db, "settings", "categories"), { items: cats });
-        input.value = '';
-        await window.renderCategoryManager();
-        state.categories = cats; // stateを更新
-        window.renderCategories(); // 入力画面の更新
-        showToast("項目を追加しました", "success");
-      } catch (e) {
-        showToast("エラー: " + e.message, "error");
-      }
-      hideLoading();
-    };
-
-    window.deleteCategory = async function (index) {
-      if (!confirm("この項目を削除しますか？\n(過去のデータには影響しません)")) return;
-
-      showLoading('項目を削除中...');
-      try {
-        const catsDoc = await getDoc(doc(db, "settings", "categories"));
-        const cats = catsDoc.data().items;
-        cats.splice(index, 1);
-        await setDoc(doc(db, "settings", "categories"), { items: cats });
-        await window.renderCategoryManager();
-        state.categories = cats; // stateを更新
-        window.renderCategories(); // 入力画面の更新
-        showToast("項目を削除しました", "success");
-      } catch (e) {
-        showToast("エラー: " + e.message, "error");
-      }
-      hideLoading();
-    };
-
-    // ========================================
     // 初期化
     // ========================================
-    document.addEventListener('DOMContentLoaded', function () {
-      if (window.initVaultUI) window.initVaultUI();
-      if (window.loadData) window.loadData();
-    });
+    document.addEventListener('DOMContentLoaded', function () { initVaultUI(); loadData(); });
 
-    window.loadData = async function () {
-      showLoading('キャッシュブックを読み込み中...');
+    async function loadData() {
+      showLoading('データを読み込み中...');
       try {
-        // 利用可能な月を取得（空でも続行）
-        try {
-          state.availableMonths = await window.callApi('getAvailableMonths');
-        } catch (mErr) {
-          console.warn('月一覧取得エラー:', mErr);
-          state.availableMonths = [{ name: getCurrentMonthId(), label: '今月' }];
-        }
-
         var results = await Promise.all([
-          window.callApi('getBalance'),
-          window.callApi('getCategories'),
-          window.callApi('getVault')
+          callApi('getBalance'),
+          callApi('getCategories'),
+          callApi('getVault')
         ]);
-
-        window.updateBalanceUI(results[0]);
-        state.viewingMonth = results[0].month;
+        updateBalanceUI(results[0]);
         state.categories = results[1] || [];
-        window.renderCategories();
-        if (results[2] && results[2].denominations) {
-          state.vault = results[2].denominations;
-          window.updateVaultUI();
-        }
+        renderCategories();
+        if (results[2] && results[2].denominations) { state.vault = results[2].denominations; updateVaultUI(); }
       } catch (e) {
-        console.error('Initial Load Error:', e);
-        showToast('データの読み込みに失敗しました: ' + e.message, 'error');
+        showToast('データ読み込みエラー: ' + e.message, 'error');
       }
       hideLoading();
-    };
+    }
 
     // ========================================
     // タブ制御
     // ========================================
-    window.switchTab = function (t) {
+    function switchTab(t) {
       document.querySelectorAll('.tab-content').forEach(function (el) { el.classList.remove('active'); });
       document.querySelectorAll('.tab-item').forEach(function (el) { el.classList.remove('active'); });
       document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
       document.getElementById('tabBar' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
-      if (t === 'history') window.loadAvailableMonths();
-      if (t === 'vault') window.updateVaultDiff();
-      if (t === 'settings') window.renderCategoryManager();
-    };
+      if (t === 'history') loadAvailableMonths();
+      if (t === 'vault') updateVaultDiff();
+    }
 
     // ========================================
     // 残高
     // ========================================
-    window.updateBalanceUI = function (data) {
+    function updateBalanceUI(data) {
       if (!data) return;
       state.balance = data.balance || 0; state.income = data.income || 0; state.expense = data.expense || 0;
       document.getElementById('balanceAmount').textContent = formatNumber(state.balance);
       document.getElementById('incomeTotal').textContent = '¥' + formatNumber(state.income);
       document.getElementById('expenseTotal').textContent = '¥' + formatNumber(state.expense);
-
       if (data.month) {
-        state.viewingMonth = data.month;
         var p = data.month.split('_');
         document.getElementById('balanceMonth').textContent = p[0] + '年 ' + parseInt(p[1]) + '月';
-
-        var idx = state.availableMonths.findIndex(m => m.name === data.month);
-        if (idx !== -1) {
-          document.getElementById('prevMonthBtn').disabled = (idx === state.availableMonths.length - 1);
-          document.getElementById('nextMonthBtn').disabled = (idx === 0);
-        }
       }
-    };
-
-    window.changeBalanceMonth = async function (delta) {
-      var idx = state.availableMonths.findIndex(m => m.name === state.viewingMonth);
-      if (idx === -1) return;
-
-      var nextIdx = idx + delta;
-      if (nextIdx < 0 || nextIdx >= state.availableMonths.length) return;
-
-      var targetMonth = state.availableMonths[nextIdx].name;
-      showLoading('残高を取得中...');
-      try {
-        var data = await window.callApi('getBalance', { sheetName: targetMonth });
-        window.updateBalanceUI(data);
-      } catch (e) {
-        showToast('データの取得に失敗: ' + e.message, 'error');
-      }
-      hideLoading();
-    };
+    }
 
     // ========================================
     // 収支入力
     // ========================================
-    window.setType = function (type) {
+    function setType(type) {
       state.type = type;
       document.getElementById('btnIncome').classList.toggle('active', type === 'income');
       document.getElementById('btnExpense').classList.toggle('active', type === 'expense');
       var ad = document.getElementById('amountDisplay');
       ad.classList.remove('income-mode', 'expense-mode');
       ad.classList.add(type === 'income' ? 'income-mode' : 'expense-mode');
-      window.renderCategories();
+      renderCategories();
       state.category = ''; state.isCustomCategory = false;
       document.getElementById('customInputWrapper').classList.remove('visible');
-    };
+    }
 
-    window.renderCategories = function () {
+    function renderCategories() {
       var grid = document.getElementById('categoryGrid'); grid.innerHTML = '';
       var label = state.type === 'income' ? '収入' : '支出';
       state.categories.filter(function (c) { return c.type === label; }).forEach(function (cat) {
         var btn = document.createElement('button'); btn.className = 'category-btn'; btn.textContent = cat.name;
-        btn.onclick = function () { window.selectCategory(cat.name, false); }; grid.appendChild(btn);
+        btn.onclick = function () { selectCategory(cat.name, false); }; grid.appendChild(btn);
       });
       var ob = document.createElement('button'); ob.className = 'category-btn other-btn'; ob.textContent = '✏️ その他';
-      ob.onclick = function () { window.selectCategory('other', true); }; grid.appendChild(ob);
-    };
+      ob.onclick = function () { selectCategory('other', true); }; grid.appendChild(ob);
+    }
 
-    window.selectCategory = function (category, isCustom) {
+    function selectCategory(category, isCustom) {
       document.querySelectorAll('.category-btn').forEach(function (b) {
         b.classList.remove('active');
         if (!isCustom && b.textContent === category) b.classList.add('active');
@@ -2003,20 +1408,20 @@
       if (isCustom) { state.category = ''; document.getElementById('customInputWrapper').classList.add('visible'); document.getElementById('customCategoryInput').focus(); }
       else { state.category = category; document.getElementById('customInputWrapper').classList.remove('visible'); document.getElementById('customCategoryInput').value = ''; }
       document.getElementById('categoryValidation').classList.remove('visible');
-    };
+    }
 
-    window.keyPress = function (key) {
+    function keyPress(key) {
       if (state.amountStr.length >= 8) return;
       if (state.amountStr === '' && key === '00') return;
       if (state.amountStr === '0' && key !== '00') state.amountStr = key;
       else state.amountStr += key;
-      window.updateAmountDisplay(); document.getElementById('amountValidation').classList.remove('visible');
-    };
-    window.keyDelete = function () { state.amountStr = state.amountStr.slice(0, -1); window.updateAmountDisplay(); };
-    window.keyClear = function () { state.amountStr = ''; window.updateAmountDisplay(); };
-    window.updateAmountDisplay = function () { document.getElementById('amountText').textContent = formatNumber(parseInt(state.amountStr) || 0); };
+      updateAmountDisplay(); document.getElementById('amountValidation').classList.remove('visible');
+    }
+    function keyDelete() { state.amountStr = state.amountStr.slice(0, -1); updateAmountDisplay(); }
+    function keyClear() { state.amountStr = ''; updateAmountDisplay(); }
+    function updateAmountDisplay() { document.getElementById('amountText').textContent = formatNumber(parseInt(state.amountStr) || 0); }
 
-    window.submitRecord = async function () {
+    async function submitRecord() {
       var isValid = true;
       var category = state.category;
       if (state.isCustomCategory) category = document.getElementById('customCategoryInput').value.trim();
@@ -2027,63 +1432,63 @@
 
       showLoading('記録中...');
       try {
-        var result = await window.callApi('addRecord', { data: { type: state.type, category: category, amount: amount, note: document.getElementById('noteInput').value.trim() } });
+        var result = await callApi('addRecord', { data: { type: state.type, category: category, amount: amount, note: document.getElementById('noteInput').value.trim() } });
         showToast('記録しました！', 'success');
-        window.resetInputForm();
+        resetInputForm();
         state.balance = result.balance;
-        await window.refreshBalance();
-        window.switchTab('balance');
+        await refreshBalance();
+        switchTab('balance');
       } catch (e) { showToast('記録失敗: ' + e.message, 'error'); }
       hideLoading();
-    };
+    }
 
-    window.resetInputForm = function () {
+    function resetInputForm() {
       state.amountStr = ''; state.category = ''; state.isCustomCategory = false;
-      window.updateAmountDisplay(); document.getElementById('noteInput').value = '';
+      updateAmountDisplay(); document.getElementById('noteInput').value = '';
       document.getElementById('customCategoryInput').value = '';
       document.getElementById('customInputWrapper').classList.remove('visible');
       document.querySelectorAll('.category-btn').forEach(function (b) { b.classList.remove('active'); });
       document.getElementById('categoryValidation').classList.remove('visible');
       document.getElementById('amountValidation').classList.remove('visible');
-    };
+    }
 
-    window.refreshBalance = async function () {
-      try { window.updateBalanceUI(await window.callApi('getBalance')); } catch (e) { }
-    };
+    async function refreshBalance() {
+      try { updateBalanceUI(await callApi('getBalance')); } catch (e) { }
+    }
 
     // ========================================
     // 明細
     // ========================================
-    window.loadAvailableMonths = async function () {
+    async function loadAvailableMonths() {
       showLoading('月一覧を読み込み中...');
       try {
-        var months = await window.callApi('getAvailableMonths');
-        window.renderMonthSelector(months);
+        var months = await callApi('getAvailableMonths');
+        renderMonthSelector(months);
       } catch (e) { showToast('月一覧取得エラー', 'error'); }
       hideLoading();
-    };
+    }
 
-    window.renderMonthSelector = function (months) {
+    function renderMonthSelector(months) {
       var sel = document.getElementById('monthSelector'); sel.innerHTML = '';
       if (!months || months.length === 0) { sel.innerHTML = '<div class="no-records">月次データがありません</div>'; return; }
       months.forEach(function (m) {
         var btn = document.createElement('button'); btn.className = 'month-btn'; btn.textContent = m.label;
-        btn.onclick = function () { window.loadMonthRecords(m.name, m.label); }; sel.appendChild(btn);
+        btn.onclick = function () { loadMonthRecords(m.name, m.label); }; sel.appendChild(btn);
       });
-    };
+    }
 
-    window.loadMonthRecords = async function (sheetName, label) {
+    async function loadMonthRecords(sheetName, label) {
       state.selectedMonth = sheetName;
       showLoading('明細を読み込み中...');
       try {
-        var records = await window.callApi('getMonthlyRecords', { sheetName: sheetName });
+        var records = await callApi('getMonthlyRecords', { sheetName: sheetName });
         state.currentRecords = records;
-        window.renderRecords(records, label);
+        renderRecords(records, label);
       } catch (e) { showToast('明細取得エラー', 'error'); }
       hideLoading();
-    };
+    }
 
-    window.renderRecords = function (records, label) {
+    function renderRecords(records, label) {
       document.getElementById('monthSelectView').style.display = 'none';
       document.getElementById('recordsView').style.display = 'block';
       document.getElementById('recordsTitle').textContent = label || '';
@@ -2101,21 +1506,21 @@
           '<div class="record-info"><div class="record-category">' + escapeHtml(rec.category) + '</div>' +
           (rec.note ? '<div class="record-note">' + escapeHtml(rec.note) + '</div>' : '') + '</div>' +
           '<div class="record-amount ' + amountClass + '">' + amountText + '</div>' +
-          (rec.isCarryOver ? '' : '<button class="record-edit-btn" onclick="window.openEditModal(\'' + rec.id + '\')">✏️</button>');
+          (rec.isCarryOver ? '' : '<button class="record-edit-btn" onclick="openEditModal(' + rec.rowIndex + ')">✏️</button>');
         list.appendChild(item);
       });
-    };
+    }
 
-    window.showMonthSelect = function () {
+    function showMonthSelect() {
       document.getElementById('monthSelectView').style.display = 'block';
       document.getElementById('recordsView').style.display = 'none';
-    };
+    }
 
     // ========================================
     // 編集モーダル
     // ========================================
-    window.openEditModal = function (id) {
-      var rec = state.currentRecords.find(function (r) { return r.id === id; });
+    function openEditModal(rowIndex) {
+      var rec = state.currentRecords.find(function (r) { return r.rowIndex === rowIndex; });
       if (!rec) return;
       state.editingRecord = rec;
       document.getElementById('editCategory').value = rec.category;
@@ -2123,45 +1528,45 @@
       document.getElementById('editExpense').value = rec.expense || '';
       document.getElementById('editNote').value = rec.note || '';
       document.getElementById('editModal').classList.add('active');
-    };
-    window.closeEditModal = function () { document.getElementById('editModal').classList.remove('active'); state.editingRecord = null; };
+    }
+    function closeEditModal() { document.getElementById('editModal').classList.remove('active'); state.editingRecord = null; }
 
-    window.saveEditedRecord = async function () {
+    async function saveEditedRecord() {
       if (!state.editingRecord) return;
       var data = {
-        sheetName: state.selectedMonth, id: state.editingRecord.id,
+        sheetName: state.selectedMonth, rowIndex: state.editingRecord.rowIndex,
         category: document.getElementById('editCategory').value.trim(),
         income: Number(document.getElementById('editIncome').value) || 0,
         expense: Number(document.getElementById('editExpense').value) || 0,
         note: document.getElementById('editNote').value.trim()
       };
-      showLoading('更新中...'); window.closeEditModal();
+      showLoading('更新中...'); closeEditModal();
       try {
-        await window.callApi('updateRecord', { data: data });
+        await callApi('updateRecord', { data: data });
         showToast('更新しました', 'success');
-        await window.loadMonthRecords(state.selectedMonth, document.getElementById('recordsTitle').textContent);
-        window.refreshBalance();
+        await loadMonthRecords(state.selectedMonth, document.getElementById('recordsTitle').textContent);
+        refreshBalance();
       } catch (e) { showToast('更新失敗: ' + e.message, 'error'); }
       hideLoading();
-    };
+    }
 
-    window.deleteCurrentRecord = async function () {
+    async function deleteCurrentRecord() {
       if (!state.editingRecord) return;
       if (!confirm('このレコードを削除しますか？')) return;
-      showLoading('削除中...'); window.closeEditModal();
+      showLoading('削除中...'); closeEditModal();
       try {
-        await window.callApi('deleteRecord', { data: { sheetName: state.selectedMonth, id: state.editingRecord.id } });
+        await callApi('deleteRecord', { data: { sheetName: state.selectedMonth, rowIndex: state.editingRecord.rowIndex } });
         showToast('削除しました', 'success');
-        await window.loadMonthRecords(state.selectedMonth, document.getElementById('recordsTitle').textContent);
-        window.refreshBalance();
+        await loadMonthRecords(state.selectedMonth, document.getElementById('recordsTitle').textContent);
+        refreshBalance();
       } catch (e) { showToast('削除失敗: ' + e.message, 'error'); }
       hideLoading();
-    };
+    }
 
     // ========================================
     // 金庫
     // ========================================
-    window.initVaultUI = function () {
+    function initVaultUI() {
       var list = document.getElementById('denominationList'); list.innerHTML = '';
       DENOMINATIONS.forEach(function (denom) {
         state.vault[String(denom)] = state.vault[String(denom)] || 0;
@@ -2169,16 +1574,16 @@
         row.innerHTML =
           '<div class="denomination-label">' + formatNumber(denom) + '<span class="unit">円</span></div>' +
           '<div class="denomination-controls">' +
-          '<button class="denomination-btn minus" onclick="window.changeDenom(' + denom + ', -1)">−</button>' +
+          '<button class="denomination-btn minus" onclick="changeDenom(' + denom + ', -1)">−</button>' +
           '<span class="denomination-count" id="denomCount_' + denom + '">0</span>' +
-          '<button class="denomination-btn plus" onclick="window.changeDenom(' + denom + ', 1)">＋</button></div>' +
+          '<button class="denomination-btn plus" onclick="changeDenom(' + denom + ', 1)">＋</button></div>' +
           '<div class="denomination-subtotal" id="denomSub_' + denom + '">¥0</div>';
         list.appendChild(row);
       });
-    };
-    window.changeDenom = function (denom, delta) { state.vault[String(denom)] = Math.max(0, (state.vault[String(denom)] || 0) + delta); window.updateVaultUI(); };
+    }
+    function changeDenom(denom, delta) { state.vault[String(denom)] = Math.max(0, (state.vault[String(denom)] || 0) + delta); updateVaultUI(); }
 
-    window.updateVaultUI = function () {
+    function updateVaultUI() {
       var total = 0;
       DENOMINATIONS.forEach(function (d) {
         var c = state.vault[String(d)] || 0, s = d * c; total += s;
@@ -2186,10 +1591,10 @@
         if (ce) ce.textContent = c; if (se) se.textContent = '¥' + formatNumber(s);
       });
       document.getElementById('vaultTotal').textContent = '¥' + formatNumber(total);
-      window.updateVaultDiff();
-    };
+      updateVaultDiff();
+    }
 
-    window.updateVaultDiff = function () {
+    function updateVaultDiff() {
       var total = 0;
       DENOMINATIONS.forEach(function (d) { total += d * (state.vault[String(d)] || 0); });
       var diff = state.balance - total;
@@ -2201,16 +1606,16 @@
       if (total === 0 && state.balance === 0) { alertEl.style.display = 'none'; }
       else if (diff === 0) { alertEl.style.display = 'flex'; alertEl.className = 'vault-alert match'; alertEl.innerHTML = '✅ 残高と金庫が一致しています'; }
       else { alertEl.style.display = 'flex'; alertEl.className = 'vault-alert mismatch'; alertEl.innerHTML = '⚠️ 差異があります: ' + (diff > 0 ? '¥' : '-¥') + formatNumber(Math.abs(diff)) + '（残高の方が' + (diff > 0 ? '多い' : '少ない') + '）'; }
-    };
+    }
 
-    window.saveVaultData = async function () {
+    async function saveVaultData() {
       showLoading('金庫データを保存中...');
       try {
-        await window.callApi('saveVault', { data: { denominations: state.vault } });
+        await callApi('saveVault', { data: { denominations: state.vault } });
         showToast('金庫データを保存しました', 'success');
       } catch (e) { showToast('保存失敗: ' + e.message, 'error'); }
       hideLoading();
-    };
+    }
 
     // ========================================
     // ユーティリティ
