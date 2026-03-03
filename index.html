@@ -275,10 +275,44 @@
       margin-bottom: 8px;
     }
 
-    .balance-month {
-      font-size: 14px;
-      color: var(--text-muted);
+    .balance-month-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
       margin-bottom: 16px;
+    }
+
+    .balance-month {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      min-width: 120px;
+    }
+
+    .nav-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 12px;
+    }
+
+    .nav-btn:active {
+      transform: scale(0.9);
+      background: var(--bg-card-hover);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
     }
 
     .balance-amount {
@@ -1161,7 +1195,11 @@
           <div class="balance-decoration"></div>
           <div class="balance-header">
             <div class="balance-label">差引残高</div>
-            <div class="balance-month" id="balanceMonth">--</div>
+            <div class="balance-month-nav">
+              <button class="nav-btn" id="prevMonthBtn" onclick="changeBalanceMonth(1)">◀</button>
+              <div class="balance-month" id="balanceMonth">--</div>
+              <button class="nav-btn" id="nextMonthBtn" onclick="changeBalanceMonth(-1)">▶</button>
+            </div>
             <div class="balance-amount">
               <span id="balanceAmount">---</span><span class="balance-yen">円</span>
             </div>
@@ -1318,7 +1356,9 @@
     var state = {
       type: 'expense', category: '', isCustomCategory: false, amountStr: '',
       categories: [], balance: 0, income: 0, expense: 0, vault: {},
-      selectedMonth: '', currentRecords: [], editingRecord: null
+      selectedMonth: '', currentRecords: [], editingRecord: null,
+      // 明細表示中の月
+      viewingMonth: '', availableMonths: []
     };
     var DENOMINATIONS = [10000, 5000, 1000, 500, 100, 50, 10, 5, 1];
 
@@ -1330,12 +1370,17 @@
     async function loadData() {
       showLoading('データを読み込み中...');
       try {
+        // まず利用可能な月を取得
+        state.availableMonths = await callApi('getAvailableMonths');
+
         var results = await Promise.all([
-          callApi('getBalance'),
+          callApi('getBalance'), // 引数なしで現在の月を取得
           callApi('getCategories'),
           callApi('getVault')
         ]);
+
         updateBalanceUI(results[0]);
+        state.viewingMonth = results[0].month;
         state.categories = results[1] || [];
         renderCategories();
         if (results[2] && results[2].denominations) { state.vault = results[2].denominations; updateVaultUI(); }
@@ -1366,10 +1411,37 @@
       document.getElementById('balanceAmount').textContent = formatNumber(state.balance);
       document.getElementById('incomeTotal').textContent = '¥' + formatNumber(state.income);
       document.getElementById('expenseTotal').textContent = '¥' + formatNumber(state.expense);
+
       if (data.month) {
+        state.viewingMonth = data.month;
         var p = data.month.split('_');
         document.getElementById('balanceMonth').textContent = p[0] + '年 ' + parseInt(p[1]) + '月';
+
+        // ボタンの有効/無効制御
+        var idx = state.availableMonths.findIndex(m => m.name === data.month);
+        if (idx !== -1) {
+          document.getElementById('prevMonthBtn').disabled = (idx === state.availableMonths.length - 1);
+          document.getElementById('nextMonthBtn').disabled = (idx === 0);
+        }
       }
+    }
+
+    async function changeBalanceMonth(delta) {
+      var idx = state.availableMonths.findIndex(m => m.name === state.viewingMonth);
+      if (idx === -1) return;
+
+      var nextIdx = idx + delta;
+      if (nextIdx < 0 || nextIdx >= state.availableMonths.length) return;
+
+      var targetMonth = state.availableMonths[nextIdx].name;
+      showLoading('残高を取得中...');
+      try {
+        var data = await callApi('getBalance', { sheetName: targetMonth });
+        updateBalanceUI(data);
+      } catch (e) {
+        showToast('データの取得に失敗: ' + e.message, 'error');
+      }
+      hideLoading();
     }
 
     // ========================================
