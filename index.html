@@ -1408,12 +1408,7 @@
     }
 
     async function getPreviousMonthEndBalance(monthId) {
-      // 簡易化のため再帰的に前月を辿るか、summaryドキュメントを参照する
-      // ここでは直近の月までの全集計を避けるため、とりあえず0（または前回保存された残高）を返す
-      // 本来は summaries/{monthId} に最終残高をスナップショット保存するのがベスト
-      const q = query(collection(db, "transactions"), where("month", "<", monthId), orderBy("month", "desc"));
-      // 実際には全履歴を追うのは非効率なので、最初の繰越金設定が必要
-      // 今回はデモ＋基本実装として、0ベースで計算
+      // 繰越金の計算ロジック（将来的に拡張可能。現在は簡易的に 0 を返す）
       return 0;
     }
 
@@ -1479,8 +1474,7 @@
       const q = query(
         collection(db, "transactions"),
         where("month", "==", monthId),
-        orderBy("day", "asc"),
-        orderBy("timestamp", "asc")
+        orderBy("day", "asc")
       );
       const querySnapshot = await getDocs(q);
       const records = [];
@@ -1587,47 +1581,59 @@
     // ========================================
     // 初期化
     // ========================================
-    document.addEventListener('DOMContentLoaded', function () { initVaultUI(); loadData(); });
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.initVaultUI) window.initVaultUI();
+      if (window.loadData) window.loadData();
+    });
 
-    async function loadData() {
-      showLoading('データを読み込み中...');
+    window.loadData = async function () {
+      showLoading('キャッシュブックを読み込み中...');
       try {
-        // まず利用可能な月を取得
-        state.availableMonths = await callApi('getAvailableMonths');
+        // 利用可能な月を取得（空でも続行）
+        try {
+          state.availableMonths = await window.callApi('getAvailableMonths');
+        } catch (mErr) {
+          console.warn('月一覧取得エラー:', mErr);
+          state.availableMonths = [{ name: getCurrentMonthId(), label: '今月' }];
+        }
 
         var results = await Promise.all([
-          callApi('getBalance'), // 引数なしで現在の月を取得
-          callApi('getCategories'),
-          callApi('getVault')
+          window.callApi('getBalance'),
+          window.callApi('getCategories'),
+          window.callApi('getVault')
         ]);
 
-        updateBalanceUI(results[0]);
+        window.updateBalanceUI(results[0]);
         state.viewingMonth = results[0].month;
         state.categories = results[1] || [];
-        renderCategories();
-        if (results[2] && results[2].denominations) { state.vault = results[2].denominations; updateVaultUI(); }
+        window.renderCategories();
+        if (results[2] && results[2].denominations) {
+          state.vault = results[2].denominations;
+          window.updateVaultUI();
+        }
       } catch (e) {
-        showToast('データ読み込みエラー: ' + e.message, 'error');
+        console.error('Initial Load Error:', e);
+        showToast('データの読み込みに失敗しました: ' + e.message, 'error');
       }
       hideLoading();
-    }
+    };
 
     // ========================================
     // タブ制御
     // ========================================
-    function switchTab(t) {
+    window.switchTab = function (t) {
       document.querySelectorAll('.tab-content').forEach(function (el) { el.classList.remove('active'); });
       document.querySelectorAll('.tab-item').forEach(function (el) { el.classList.remove('active'); });
       document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
       document.getElementById('tabBar' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
-      if (t === 'history') loadAvailableMonths();
-      if (t === 'vault') updateVaultDiff();
-    }
+      if (t === 'history') window.loadAvailableMonths();
+      if (t === 'vault') window.updateVaultDiff();
+    };
 
     // ========================================
     // 残高
     // ========================================
-    function updateBalanceUI(data) {
+    window.updateBalanceUI = function (data) {
       if (!data) return;
       state.balance = data.balance || 0; state.income = data.income || 0; state.expense = data.expense || 0;
       document.getElementById('balanceAmount').textContent = formatNumber(state.balance);
@@ -1639,16 +1645,15 @@
         var p = data.month.split('_');
         document.getElementById('balanceMonth').textContent = p[0] + '年 ' + parseInt(p[1]) + '月';
 
-        // ボタンの有効/無効制御
         var idx = state.availableMonths.findIndex(m => m.name === data.month);
         if (idx !== -1) {
           document.getElementById('prevMonthBtn').disabled = (idx === state.availableMonths.length - 1);
           document.getElementById('nextMonthBtn').disabled = (idx === 0);
         }
       }
-    }
+    };
 
-    async function changeBalanceMonth(delta) {
+    window.changeBalanceMonth = async function (delta) {
       var idx = state.availableMonths.findIndex(m => m.name === state.viewingMonth);
       if (idx === -1) return;
 
@@ -1658,41 +1663,41 @@
       var targetMonth = state.availableMonths[nextIdx].name;
       showLoading('残高を取得中...');
       try {
-        var data = await callApi('getBalance', { sheetName: targetMonth });
-        updateBalanceUI(data);
+        var data = await window.callApi('getBalance', { sheetName: targetMonth });
+        window.updateBalanceUI(data);
       } catch (e) {
         showToast('データの取得に失敗: ' + e.message, 'error');
       }
       hideLoading();
-    }
+    };
 
     // ========================================
     // 収支入力
     // ========================================
-    function setType(type) {
+    window.setType = function (type) {
       state.type = type;
       document.getElementById('btnIncome').classList.toggle('active', type === 'income');
       document.getElementById('btnExpense').classList.toggle('active', type === 'expense');
       var ad = document.getElementById('amountDisplay');
       ad.classList.remove('income-mode', 'expense-mode');
       ad.classList.add(type === 'income' ? 'income-mode' : 'expense-mode');
-      renderCategories();
+      window.renderCategories();
       state.category = ''; state.isCustomCategory = false;
       document.getElementById('customInputWrapper').classList.remove('visible');
-    }
+    };
 
-    function renderCategories() {
+    window.renderCategories = function () {
       var grid = document.getElementById('categoryGrid'); grid.innerHTML = '';
       var label = state.type === 'income' ? '収入' : '支出';
       state.categories.filter(function (c) { return c.type === label; }).forEach(function (cat) {
         var btn = document.createElement('button'); btn.className = 'category-btn'; btn.textContent = cat.name;
-        btn.onclick = function () { selectCategory(cat.name, false); }; grid.appendChild(btn);
+        btn.onclick = function () { window.selectCategory(cat.name, false); }; grid.appendChild(btn);
       });
       var ob = document.createElement('button'); ob.className = 'category-btn other-btn'; ob.textContent = '✏️ その他';
-      ob.onclick = function () { selectCategory('other', true); }; grid.appendChild(ob);
-    }
+      ob.onclick = function () { window.selectCategory('other', true); }; grid.appendChild(ob);
+    };
 
-    function selectCategory(category, isCustom) {
+    window.selectCategory = function (category, isCustom) {
       document.querySelectorAll('.category-btn').forEach(function (b) {
         b.classList.remove('active');
         if (!isCustom && b.textContent === category) b.classList.add('active');
@@ -1702,20 +1707,20 @@
       if (isCustom) { state.category = ''; document.getElementById('customInputWrapper').classList.add('visible'); document.getElementById('customCategoryInput').focus(); }
       else { state.category = category; document.getElementById('customInputWrapper').classList.remove('visible'); document.getElementById('customCategoryInput').value = ''; }
       document.getElementById('categoryValidation').classList.remove('visible');
-    }
+    };
 
-    function keyPress(key) {
+    window.keyPress = function (key) {
       if (state.amountStr.length >= 8) return;
       if (state.amountStr === '' && key === '00') return;
       if (state.amountStr === '0' && key !== '00') state.amountStr = key;
       else state.amountStr += key;
-      updateAmountDisplay(); document.getElementById('amountValidation').classList.remove('visible');
-    }
-    function keyDelete() { state.amountStr = state.amountStr.slice(0, -1); updateAmountDisplay(); }
-    function keyClear() { state.amountStr = ''; updateAmountDisplay(); }
-    function updateAmountDisplay() { document.getElementById('amountText').textContent = formatNumber(parseInt(state.amountStr) || 0); }
+      window.updateAmountDisplay(); document.getElementById('amountValidation').classList.remove('visible');
+    };
+    window.keyDelete = function () { state.amountStr = state.amountStr.slice(0, -1); window.updateAmountDisplay(); };
+    window.keyClear = function () { state.amountStr = ''; window.updateAmountDisplay(); };
+    window.updateAmountDisplay = function () { document.getElementById('amountText').textContent = formatNumber(parseInt(state.amountStr) || 0); };
 
-    async function submitRecord() {
+    window.submitRecord = async function () {
       var isValid = true;
       var category = state.category;
       if (state.isCustomCategory) category = document.getElementById('customCategoryInput').value.trim();
@@ -1726,63 +1731,63 @@
 
       showLoading('記録中...');
       try {
-        var result = await callApi('addRecord', { data: { type: state.type, category: category, amount: amount, note: document.getElementById('noteInput').value.trim() } });
+        var result = await window.callApi('addRecord', { data: { type: state.type, category: category, amount: amount, note: document.getElementById('noteInput').value.trim() } });
         showToast('記録しました！', 'success');
-        resetInputForm();
+        window.resetInputForm();
         state.balance = result.balance;
-        await refreshBalance();
-        switchTab('balance');
+        await window.refreshBalance();
+        window.switchTab('balance');
       } catch (e) { showToast('記録失敗: ' + e.message, 'error'); }
       hideLoading();
-    }
+    };
 
-    function resetInputForm() {
+    window.resetInputForm = function () {
       state.amountStr = ''; state.category = ''; state.isCustomCategory = false;
-      updateAmountDisplay(); document.getElementById('noteInput').value = '';
+      window.updateAmountDisplay(); document.getElementById('noteInput').value = '';
       document.getElementById('customCategoryInput').value = '';
       document.getElementById('customInputWrapper').classList.remove('visible');
       document.querySelectorAll('.category-btn').forEach(function (b) { b.classList.remove('active'); });
       document.getElementById('categoryValidation').classList.remove('visible');
       document.getElementById('amountValidation').classList.remove('visible');
-    }
+    };
 
-    async function refreshBalance() {
-      try { updateBalanceUI(await callApi('getBalance')); } catch (e) { }
-    }
+    window.refreshBalance = async function () {
+      try { window.updateBalanceUI(await window.callApi('getBalance')); } catch (e) { }
+    };
 
     // ========================================
     // 明細
     // ========================================
-    async function loadAvailableMonths() {
+    window.loadAvailableMonths = async function () {
       showLoading('月一覧を読み込み中...');
       try {
-        var months = await callApi('getAvailableMonths');
-        renderMonthSelector(months);
+        var months = await window.callApi('getAvailableMonths');
+        window.renderMonthSelector(months);
       } catch (e) { showToast('月一覧取得エラー', 'error'); }
       hideLoading();
-    }
+    };
 
-    function renderMonthSelector(months) {
+    window.renderMonthSelector = function (months) {
       var sel = document.getElementById('monthSelector'); sel.innerHTML = '';
       if (!months || months.length === 0) { sel.innerHTML = '<div class="no-records">月次データがありません</div>'; return; }
       months.forEach(function (m) {
         var btn = document.createElement('button'); btn.className = 'month-btn'; btn.textContent = m.label;
-        btn.onclick = function () { loadMonthRecords(m.name, m.label); }; sel.appendChild(btn);
+        btn.onclick = function () { window.loadMonthRecords(m.name, m.label); }; sel.appendChild(btn);
       });
-    }
+    };
 
-    async function loadMonthRecords(sheetName, label) {
+    window.loadMonthRecords = async function (sheetName, label) {
       state.selectedMonth = sheetName;
       showLoading('明細を読み込み中...');
       try {
-        var records = await callApi('getMonthlyRecords', { sheetName: sheetName });
+        var records = await window.callApi('getMonthlyRecords', { sheetName: sheetName });
         state.currentRecords = records;
-        renderRecords(records, label);
+        window.renderRecords(records, label);
       } catch (e) { showToast('明細取得エラー', 'error'); }
       hideLoading();
-    }
+    };
 
-    function renderRecords(records, label) {
+    window.renderRecords = function (records, label) {
       document.getElementById('monthSelectView').style.display = 'none';
       document.getElementById('recordsView').style.display = 'block';
       document.getElementById('recordsTitle').textContent = label || '';
@@ -1800,20 +1805,20 @@
           '<div class="record-info"><div class="record-category">' + escapeHtml(rec.category) + '</div>' +
           (rec.note ? '<div class="record-note">' + escapeHtml(rec.note) + '</div>' : '') + '</div>' +
           '<div class="record-amount ' + amountClass + '">' + amountText + '</div>' +
-          (rec.isCarryOver ? '' : '<button class="record-edit-btn" onclick="openEditModal(\'' + rec.id + '\')">✏️</button>');
+          (rec.isCarryOver ? '' : '<button class="record-edit-btn" onclick="window.openEditModal(\'' + rec.id + '\')">✏️</button>');
         list.appendChild(item);
       });
-    }
+    };
 
-    function showMonthSelect() {
+    window.showMonthSelect = function () {
       document.getElementById('monthSelectView').style.display = 'block';
       document.getElementById('recordsView').style.display = 'none';
-    }
+    };
 
     // ========================================
     // 編集モーダル
     // ========================================
-    function openEditModal(id) {
+    window.openEditModal = function (id) {
       var rec = state.currentRecords.find(function (r) { return r.id === id; });
       if (!rec) return;
       state.editingRecord = rec;
@@ -1822,10 +1827,10 @@
       document.getElementById('editExpense').value = rec.expense || '';
       document.getElementById('editNote').value = rec.note || '';
       document.getElementById('editModal').classList.add('active');
-    }
-    function closeEditModal() { document.getElementById('editModal').classList.remove('active'); state.editingRecord = null; }
+    };
+    window.closeEditModal = function () { document.getElementById('editModal').classList.remove('active'); state.editingRecord = null; };
 
-    async function saveEditedRecord() {
+    window.saveEditedRecord = async function () {
       if (!state.editingRecord) return;
       var data = {
         sheetName: state.selectedMonth, id: state.editingRecord.id,
@@ -1834,33 +1839,33 @@
         expense: Number(document.getElementById('editExpense').value) || 0,
         note: document.getElementById('editNote').value.trim()
       };
-      showLoading('更新中...'); closeEditModal();
+      showLoading('更新中...'); window.closeEditModal();
       try {
-        await callApi('updateRecord', { data: data });
+        await window.callApi('updateRecord', { data: data });
         showToast('更新しました', 'success');
-        await loadMonthRecords(state.selectedMonth, document.getElementById('recordsTitle').textContent);
-        refreshBalance();
+        await window.loadMonthRecords(state.selectedMonth, document.getElementById('recordsTitle').textContent);
+        window.refreshBalance();
       } catch (e) { showToast('更新失敗: ' + e.message, 'error'); }
       hideLoading();
-    }
+    };
 
-    async function deleteCurrentRecord() {
+    window.deleteCurrentRecord = async function () {
       if (!state.editingRecord) return;
       if (!confirm('このレコードを削除しますか？')) return;
-      showLoading('削除中...'); closeEditModal();
+      showLoading('削除中...'); window.closeEditModal();
       try {
-        await callApi('deleteRecord', { data: { sheetName: state.selectedMonth, id: state.editingRecord.id } });
+        await window.callApi('deleteRecord', { data: { sheetName: state.selectedMonth, id: state.editingRecord.id } });
         showToast('削除しました', 'success');
-        await loadMonthRecords(state.selectedMonth, document.getElementById('recordsTitle').textContent);
-        refreshBalance();
+        await window.loadMonthRecords(state.selectedMonth, document.getElementById('recordsTitle').textContent);
+        window.refreshBalance();
       } catch (e) { showToast('削除失敗: ' + e.message, 'error'); }
       hideLoading();
-    }
+    };
 
     // ========================================
     // 金庫
     // ========================================
-    function initVaultUI() {
+    window.initVaultUI = function () {
       var list = document.getElementById('denominationList'); list.innerHTML = '';
       DENOMINATIONS.forEach(function (denom) {
         state.vault[String(denom)] = state.vault[String(denom)] || 0;
@@ -1868,16 +1873,16 @@
         row.innerHTML =
           '<div class="denomination-label">' + formatNumber(denom) + '<span class="unit">円</span></div>' +
           '<div class="denomination-controls">' +
-          '<button class="denomination-btn minus" onclick="changeDenom(' + denom + ', -1)">−</button>' +
+          '<button class="denomination-btn minus" onclick="window.changeDenom(' + denom + ', -1)">−</button>' +
           '<span class="denomination-count" id="denomCount_' + denom + '">0</span>' +
-          '<button class="denomination-btn plus" onclick="changeDenom(' + denom + ', 1)">＋</button></div>' +
+          '<button class="denomination-btn plus" onclick="window.changeDenom(' + denom + ', 1)">＋</button></div>' +
           '<div class="denomination-subtotal" id="denomSub_' + denom + '">¥0</div>';
         list.appendChild(row);
       });
-    }
-    function changeDenom(denom, delta) { state.vault[String(denom)] = Math.max(0, (state.vault[String(denom)] || 0) + delta); updateVaultUI(); }
+    };
+    window.changeDenom = function (denom, delta) { state.vault[String(denom)] = Math.max(0, (state.vault[String(denom)] || 0) + delta); window.updateVaultUI(); };
 
-    function updateVaultUI() {
+    window.updateVaultUI = function () {
       var total = 0;
       DENOMINATIONS.forEach(function (d) {
         var c = state.vault[String(d)] || 0, s = d * c; total += s;
@@ -1885,10 +1890,10 @@
         if (ce) ce.textContent = c; if (se) se.textContent = '¥' + formatNumber(s);
       });
       document.getElementById('vaultTotal').textContent = '¥' + formatNumber(total);
-      updateVaultDiff();
-    }
+      window.updateVaultDiff();
+    };
 
-    function updateVaultDiff() {
+    window.updateVaultDiff = function () {
       var total = 0;
       DENOMINATIONS.forEach(function (d) { total += d * (state.vault[String(d)] || 0); });
       var diff = state.balance - total;
@@ -1900,16 +1905,16 @@
       if (total === 0 && state.balance === 0) { alertEl.style.display = 'none'; }
       else if (diff === 0) { alertEl.style.display = 'flex'; alertEl.className = 'vault-alert match'; alertEl.innerHTML = '✅ 残高と金庫が一致しています'; }
       else { alertEl.style.display = 'flex'; alertEl.className = 'vault-alert mismatch'; alertEl.innerHTML = '⚠️ 差異があります: ' + (diff > 0 ? '¥' : '-¥') + formatNumber(Math.abs(diff)) + '（残高の方が' + (diff > 0 ? '多い' : '少ない') + '）'; }
-    }
+    };
 
-    async function saveVaultData() {
+    window.saveVaultData = async function () {
       showLoading('金庫データを保存中...');
       try {
-        await callApi('saveVault', { data: { denominations: state.vault } });
+        await window.callApi('saveVault', { data: { denominations: state.vault } });
         showToast('金庫データを保存しました', 'success');
       } catch (e) { showToast('保存失敗: ' + e.message, 'error'); }
       hideLoading();
-    }
+    };
 
     // ========================================
     // ユーティリティ
