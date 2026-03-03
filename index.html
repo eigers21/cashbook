@@ -1178,6 +1178,55 @@
       color: rgba(255, 255, 255, 0.5);
       line-height: 1.4;
     }
+
+    .category-manager {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .category-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .category-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .category-delete {
+      color: #ff5252;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .category-add-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .category-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 14px;
+    }
   </style>
 </head>
 
@@ -1361,6 +1410,24 @@
             style="background:rgba(244,67,54,0.15); border-color:rgba(244,67,54,0.3); color:#f44336;">
             🔄 スプシ ➔ アプリ
           </button>
+        </div>
+
+        <div class="category-manager">
+          <div class="section-title">項目の管理 (支出)</div>
+          <div class="category-list" id="settingsExpenseList"></div>
+          <div class="category-add-form">
+            <input type="text" id="newExpenseName" class="category-input" placeholder="新しい支出項目...">
+            <button class="vault-save-btn" onclick="addCategory('支出')"
+              style="width:auto; padding:8px 16px; margin:0;">追加</button>
+          </div>
+
+          <div class="section-title" style="margin-top:20px;">項目の管理 (収入)</div>
+          <div class="category-list" id="settingsIncomeList"></div>
+          <div class="category-add-form">
+            <input type="text" id="newIncomeName" class="category-input" placeholder="新しい収入項目...">
+            <button class="vault-save-btn" onclick="addCategory('収入')"
+              style="width:auto; padding:8px 16px; margin:0;">追加</button>
+          </div>
         </div>
 
         <div class="settings-footer" style="margin-top:40px; font-size:12px; color:#666; text-align:center;">
@@ -1633,6 +1700,9 @@
             openingBalance = Number(summarySnap.data().openingBalance) || 0;
           }
 
+          // カテゴリも一緒に送信 (最初の月のみ代表してマスタを更新)
+          const categories = (await getDoc(doc(db, "settings", "categories"))).data()?.items || [];
+
           // GASへ一括送信
           const res = await fetch(MIGRATION_GAS_URL, {
             method: 'POST',
@@ -1641,7 +1711,8 @@
               data: {
                 sheetName: m.name,
                 transactions: recs,
-                openingBalance: openingBalance
+                openingBalance: openingBalance,
+                categories: categories // 追加
               }
             })
           });
@@ -1737,6 +1808,69 @@
     var DENOMINATIONS = [10000, 5000, 1000, 500, 100, 50, 10, 5, 1];
 
     // ========================================
+    // カテゴリ一管理 (設定タブ)
+    // ========================================
+    window.renderCategoryManager = async function () {
+      const catsDoc = await getDoc(doc(db, "settings", "categories"));
+      if (!catsDoc.exists()) return;
+      const cats = catsDoc.data().items || [];
+
+      const expenseList = document.getElementById('settingsExpenseList');
+      const incomeList = document.getElementById('settingsIncomeList');
+      expenseList.innerHTML = '';
+      incomeList.innerHTML = '';
+
+      cats.forEach((cat, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'category-chip';
+        chip.innerHTML = `${cat.name} <span class="category-delete" onclick="deleteCategory(${index})">×</span>`;
+
+        if (cat.type === '支出') expenseList.appendChild(chip);
+        else incomeList.appendChild(chip);
+      });
+    };
+
+    window.addCategory = async function (type) {
+      const inputId = type === '支出' ? 'newExpenseName' : 'newIncomeName';
+      const input = document.getElementById(inputId);
+      const name = input.value.trim();
+      if (!name) return;
+
+      showLoading('項目を追加中...');
+      try {
+        const catsDoc = await getDoc(doc(db, "settings", "categories"));
+        const cats = catsDoc.exists() ? catsDoc.data().items || [] : [];
+        cats.push({ name: name, type: type });
+        await setDoc(doc(db, "settings", "categories"), { items: cats });
+        input.value = '';
+        await window.renderCategoryManager();
+        await window.loadCategories(); // 入力画面の更新
+        showToast("項目を追加しました", "success");
+      } catch (e) {
+        showToast("エラー: " + e.message, "error");
+      }
+      hideLoading();
+    };
+
+    window.deleteCategory = async function (index) {
+      if (!confirm("この項目を削除しますか？\n(過去のデータには影響しません)")) return;
+
+      showLoading('項目を削除中...');
+      try {
+        const catsDoc = await getDoc(doc(db, "settings", "categories"));
+        const cats = catsDoc.data().items;
+        cats.splice(index, 1);
+        await setDoc(doc(db, "settings", "categories"), { items: cats });
+        await window.renderCategoryManager();
+        await window.loadCategories(); // 入力画面の更新
+        showToast("項目を削除しました", "success");
+      } catch (e) {
+        showToast("エラー: " + e.message, "error");
+      }
+      hideLoading();
+    };
+
+    // ========================================
     // 初期化
     // ========================================
     document.addEventListener('DOMContentLoaded', function () {
@@ -1786,6 +1920,7 @@
       document.getElementById('tabBar' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
       if (t === 'history') window.loadAvailableMonths();
       if (t === 'vault') window.updateVaultDiff();
+      if (t === 'settings') window.renderCategoryManager();
     };
 
     // ========================================

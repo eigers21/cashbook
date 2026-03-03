@@ -789,11 +789,44 @@ function bulkSyncTransactions(data) {
     // 全体の残高を再計算
     recalcBalances(sheet, 2);
 
+    // 【追加】カテゴリ（マスタ）の更新（データが含まれている場合）
+    if (data.categories && Array.isArray(data.categories)) {
+      updateMasterCategories(ss, data.categories);
+    }
+
     return {
       success: true,
       count: transactions.length
     };
   } catch (e) {
     throw new Error('一括同期に失敗しました: ' + e.message);
+  }
+}
+
+/**
+ * マスタ_項目シートを最新のカテゴリリストで更新する
+ * @param {Spreadsheet} ss - スプレッドシートオブジェクト
+ * @param {Object[]} categories - { name, type } の配列
+ */
+function updateMasterCategories(ss, categories) {
+  let masterSheet = ss.getSheetByName(MASTER_SHEET_NAME);
+  if (!masterSheet) {
+    masterSheet = ss.insertSheet(MASTER_SHEET_NAME);
+  }
+
+  // ヘッダー以外の既存データをクリア
+  const lastRow = masterSheet.getLastRow();
+  if (lastRow >= 2) {
+    masterSheet.getRange(2, 1, lastRow - 1, 2).clearContent();
+  } else {
+    // ヘッダーがない場合は作成
+    masterSheet.getRange(1, 1, 1, 2).setValues([['項目名', '区分']]).setFontWeight('bold');
+  }
+
+  if (categories.length > 0) {
+    const rows = categories.map(function(c) {
+      return [c.name, c.type];
+    });
+    masterSheet.getRange(2, 1, rows.length, 2).setValues(rows);
   }
 }
