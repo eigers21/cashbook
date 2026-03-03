@@ -1303,6 +1303,9 @@
         <button class="vault-save-btn" onclick="migrateFromGas()"
           style="margin-top:12px; background:rgba(255,193,7,0.15); border-color:rgba(255,193,7,0.3); color:#ffc107;">🔄
           スプレッドシートから同期</button>
+        <button class="vault-save-btn" onclick="exportToGas()"
+          style="margin-top:12px; background:rgba(76,175,80,0.15); border-color:rgba(76,175,80,0.3); color:#4caf50;">💾
+          スプレッドシートへ一括保存</button>
       </div>
     </div>
   </div>
@@ -1528,6 +1531,67 @@
 
     // --- データ移行用 (GAS → Firestore) ---
     const MIGRATION_GAS_URL = 'https://script.google.com/macros/s/AKfycbxZqD_RVIZgH742zfUzucgI9-j700-pUapULWUPjlv0PtSsIkK-_HbUZX9tVNLdyYnPfA/exec';
+
+    /**
+     * プランA: Firebaseからスプレッドシートへ一括書き出し
+     */
+    window.exportToGas = async function () {
+      if (!confirm("アプリ（Firebase）の内容をスプレッドシートに一括保存しますか？\nスプレッドシートの既存データは上書きされます。")) return;
+
+      showLoading('スプレッドシートへ書き出し中...');
+      try {
+        // 利用可能な月を取得
+        const months = await window.callApi('getAvailableMonths');
+
+        for (const m of months) {
+          showLoading(`${m.label} を保存中...`);
+
+          // Firestoreからその月の全レコードを取得
+          const q = query(collection(db, "transactions"), where("month", "==", m.name));
+          const snap = await getDocs(q);
+          const recs = [];
+          snap.forEach(doc => {
+            const d = doc.data();
+            recs.push({
+              day: d.day,
+              category: d.category,
+              income: d.income,
+              expense: d.expense,
+              note: d.note,
+              timestamp: d.timestamp
+            });
+          });
+
+          // 開始残高を取得
+          let openingBalance = 0;
+          const summarySnap = await getDoc(doc(db, "summaries", m.name));
+          if (summarySnap.exists()) {
+            openingBalance = Number(summarySnap.data().openingBalance) || 0;
+          }
+
+          // GASへ一括送信
+          const res = await fetch(MIGRATION_GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'bulkSync',
+              data: {
+                sheetName: m.name,
+                transactions: recs,
+                openingBalance: openingBalance
+              }
+            })
+          });
+          const result = await res.json();
+          if (result.error) throw new Error(result.error);
+        }
+
+        showToast("スプレッドシートへの一括保存が完了しました！", "success");
+      } catch (e) {
+        console.error('Export Error:', e);
+        showToast("保存エラー: " + e.message, "error");
+      }
+      hideLoading();
+    };
 
     window.migrateFromGas = async function () {
       if (!confirm("スプレッドシートの全データを Firebase に移行しますか？\n(既に移行済みのデータがある場合は重複する可能性があります)")) return;
