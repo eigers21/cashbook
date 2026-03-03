@@ -1389,21 +1389,27 @@
 
     async function getFirestoreBalance(monthId) {
       const targetMonth = monthId || getCurrentMonthId();
+
+      // 開始残高（繰越金）の取得
+      let openingBalance = 0;
+      try {
+        const summarySnap = await getDoc(doc(db, "summaries", targetMonth));
+        if (summarySnap.exists()) {
+          openingBalance = Number(summarySnap.data().openingBalance) || 0;
+        }
+      } catch (e) { console.warn("Summary fetch error:", e); }
+
       const q = query(collection(db, "transactions"), where("month", "==", targetMonth));
       const querySnapshot = await getDocs(q);
 
-      let balance = 0, income = 0, expense = 0;
+      let income = 0, expense = 0;
       querySnapshot.forEach((doc) => {
         const d = doc.data();
         income += (Number(d.income) || 0);
         expense += (Number(d.expense) || 0);
       });
 
-      // 繰越金の取得（前月の残高）
-      const prevMonth = getRelativeMonthId(targetMonth, -1);
-      const prevBal = await getPreviousMonthEndBalance(prevMonth);
-      balance = prevBal + income - expense;
-
+      const balance = openingBalance + income - expense;
       return { balance, income, expense, month: targetMonth };
     }
 
@@ -1537,11 +1543,24 @@
         const months = await monthsRes.json();
 
         for (const m of months) {
+          showLoading(`${m.label} を移行中...`);
           const recsRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getMonthlyRecords', sheetName: m.name }) });
           const recs = await recsRes.json();
+
+          // 重複防止: その月の既存データを削除
+          const existingQ = query(collection(db, "transactions"), where("month", "==", m.name));
+          const existingSnap = await getDocs(existingQ);
+          const deleteBatch = writeBatch(db);
+          existingSnap.forEach(d => deleteBatch.delete(d.ref));
+          await deleteBatch.commit();
+
           const batch = writeBatch(db);
+          let openingBalance = 0;
           for (const r of recs) {
-            if (r.isCarryOver) continue; // 繰越は計算で出すためスキップ
+            if (r.isCarryOver) {
+              openingBalance = Number(r.balance) || 0;
+              continue;
+            }
             const newDoc = doc(collection(db, "transactions"));
             batch.set(newDoc, {
               year: Number(m.name.split('_')[0]),
@@ -1554,6 +1573,8 @@
               timestamp: serverTimestamp()
             });
           }
+          // 開始残高を保存
+          await setDoc(doc(db, "summaries", m.name), { openingBalance: openingBalance });
           await batch.commit();
         }
 
