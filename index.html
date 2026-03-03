@@ -1145,6 +1145,39 @@
     .vault-save-btn:active {
       transform: scale(0.98);
     }
+
+    .settings-page {
+      padding: 8px 16px;
+      padding-bottom: 100px;
+    }
+
+    .settings-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .settings-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .settings-info-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .settings-info-desc {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.4;
+    }
   </style>
 </head>
 
@@ -1300,12 +1333,39 @@
         </div>
         <div class="denomination-list" id="denominationList"></div>
         <button class="vault-save-btn" onclick="saveVaultData()">💾 保存する</button>
-        <button class="vault-save-btn" onclick="migrateFromGas()"
-          style="margin-top:12px; background:rgba(255,193,7,0.15); border-color:rgba(255,193,7,0.3); color:#ffc107;">🔄
-          スプレッドシートから同期</button>
-        <button class="vault-save-btn" onclick="exportToGas()"
-          style="margin-top:12px; background:rgba(76,175,80,0.15); border-color:rgba(76,175,80,0.3); color:#4caf50;">💾
-          スプレッドシートへ一括保存</button>
+      </div>
+    </div>
+
+    <!-- 設定タブ -->
+    <div class="tab-content" id="tabSettings">
+      <div class="settings-page">
+        <div class="section-title">データ管理・設定</div>
+
+        <div class="settings-card">
+          <div class="settings-info">
+            <div class="settings-info-title">📤 スプレッドシートへ保存</div>
+            <div class="settings-info-desc">アプリ（Firebase）の内容をスプレッドシートに書き出します。</div>
+          </div>
+          <button class="vault-save-btn" onclick="exportToGas()"
+            style="background:rgba(76,175,80,0.15); border-color:rgba(76,175,80,0.3); color:#4caf50;">
+            💾 アプリ ➔ スプシ
+          </button>
+        </div>
+
+        <div class="settings-card" style="margin-top:20px;">
+          <div class="settings-info">
+            <div class="settings-info-title">📥 スプレッドシートから同期</div>
+            <div class="settings-info-desc" style="color:#f44336;">【注意】アプリ側のデータが消え、スプシの内容に置き換わります。</div>
+          </div>
+          <button class="vault-save-btn" onclick="migrateFromGas()"
+            style="background:rgba(244,67,54,0.15); border-color:rgba(244,67,54,0.3); color:#f44336;">
+            🔄 スプシ ➔ アプリ
+          </button>
+        </div>
+
+        <div class="settings-footer" style="margin-top:40px; font-size:12px; color:#666; text-align:center;">
+          Cashbook v2.0 (Firebase Edition)
+        </div>
       </div>
     </div>
   </div>
@@ -1327,6 +1387,10 @@
     <div class="tab-item" onclick="switchTab('vault')" id="tabBarVault">
       <div class="tab-icon">🏦</div>
       <div class="tab-label">金庫</div>
+    </div>
+    <div class="tab-item" onclick="switchTab('settings')" id="tabBarSettings">
+      <div class="tab-icon">🛠</div>
+      <div class="tab-label">設定</div>
     </div>
   </div>
 
@@ -1536,7 +1600,7 @@
      * プランA: Firebaseからスプレッドシートへ一括書き出し
      */
     window.exportToGas = async function () {
-      if (!confirm("アプリ（Firebase）の内容をスプレッドシートに一括保存しますか？\nスプレッドシートの既存データは上書きされます。")) return;
+      if (!confirm("【確認】アプリ（Firebase）の内容をスプレッドシートに一括保存します。\n\nスプレッドシートの既存データは全て消去され、アプリの内容で上書きされますが、よろしいですか？")) return;
 
       showLoading('スプレッドシートへ書き出し中...');
       try {
@@ -1594,8 +1658,8 @@
     };
 
     window.migrateFromGas = async function () {
-      if (!confirm("スプレッドシートの全データを Firebase に移行しますか？\n(既に移行済みのデータがある場合は重複する可能性があります)")) return;
-      showLoading("データを移行中...");
+      if (!confirm("【警告】スプレッドシートの全データをアプリ（Firebase）に同期します。\n\n現在アプリに入力されているデータは全て消去され、スプレッドシートの内容に置き換わります。\n\n本当によろしいですか？")) return;
+      showLoading("データを同期中...");
       try {
         // 1. カテゴリの移行
         const catsRes = await fetch(MIGRATION_GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getCategories' }) });
