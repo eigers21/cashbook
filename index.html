@@ -1531,6 +1531,15 @@
         const summarySnap = await getDoc(doc(db, "summaries", targetMonth));
         if (summarySnap.exists()) {
           openingBalance = Number(summarySnap.data().openingBalance) || 0;
+        } else {
+          // summaries ドキュメントが存在しない場合、前月の残高から自動計算
+          openingBalance = await getPreviousMonthEndBalance(targetMonth);
+          // 計算結果を保存しておく（次回以降の高速化）
+          if (openingBalance !== 0) {
+            try {
+              await setDoc(doc(db, "summaries", targetMonth), { openingBalance: openingBalance });
+            } catch (saveErr) { console.warn("Summary save error:", saveErr); }
+          }
         }
       } catch (e) { console.warn("Summary fetch error:", e); }
 
@@ -1549,8 +1558,46 @@
     }
 
     async function getPreviousMonthEndBalance(monthId) {
-      // 繰越金の計算ロジック（将来的に拡張可能。現在は簡易的に 0 を返す）
-      return 0;
+      // 前月のシートIDを計算
+      const p = monthId.split('_');
+      const year = parseInt(p[0]);
+      const month = parseInt(p[1]);
+      let prevYear, prevMonth;
+      if (month === 1) {
+        prevYear = year - 1;
+        prevMonth = 12;
+      } else {
+        prevYear = year;
+        prevMonth = month - 1;
+      }
+      const prevMonthId = prevYear + '_' + ('0' + prevMonth).slice(-2);
+
+      // 前月の開始残高を取得
+      let prevOpening = 0;
+      try {
+        const prevSummarySnap = await getDoc(doc(db, "summaries", prevMonthId));
+        if (prevSummarySnap.exists()) {
+          prevOpening = Number(prevSummarySnap.data().openingBalance) || 0;
+        }
+      } catch (e) { console.warn("Previous summary fetch error:", e); }
+
+      // 前月の取引を集計
+      const q = query(collection(db, "transactions"), where("month", "==", prevMonthId));
+      const querySnapshot = await getDocs(q);
+
+      let prevIncome = 0, prevExpense = 0;
+      querySnapshot.forEach((d) => {
+        const data = d.data();
+        prevIncome += (Number(data.income) || 0);
+        prevExpense += (Number(data.expense) || 0);
+      });
+
+      // 前月のデータが1件もなく、開始残高も0の場合は0を返す
+      if (querySnapshot.empty && prevOpening === 0) {
+        return 0;
+      }
+
+      return prevOpening + prevIncome - prevExpense;
     }
 
     async function getFirestoreCategories() {
