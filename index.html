@@ -2126,7 +2126,7 @@
         var records = await window.callApi('getMonthlyRecords', { sheetName: sheetName });
         state.currentRecords = records;
         window.renderRecords(records, label);
-      } catch (e) { showToast('明細取得エラー', 'error'); }
+      } catch (e) { console.error('明細取得エラー:', e); showToast('明細取得エラー: ' + e.message, 'error'); }
       hideLoading();
     };
 
@@ -2142,7 +2142,7 @@
         var amountText = '', amountClass = '';
         if (rec.income > 0) { amountText = '+¥' + formatNumber(rec.income); amountClass = 'income'; }
         else if (rec.expense > 0) { amountText = '-¥' + formatNumber(rec.expense); amountClass = 'expense'; }
-        else { amountText = '¥' + formatNumber(rec.balance); }
+        else { amountText = '¥' + formatNumber(rec.balance || 0); }
         item.innerHTML =
           '<div class="record-date"><span class="day">' + (rec.day || '-') + '</span>日</div>' +
           '<div class="record-info"><div class="record-category">' + escapeHtml(rec.category) + '</div>' +
