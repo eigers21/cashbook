@@ -2195,9 +2195,10 @@
     window.deleteCurrentRecord = async function () {
       if (!state.editingRecord) return;
       if (!confirm('このレコードを削除しますか？')) return;
+      var deleteId = state.editingRecord.id;
       showLoading('削除中...'); window.closeEditModal();
       try {
-        await window.callApi('deleteRecord', { data: { sheetName: state.selectedMonth, id: state.editingRecord.id } });
+        await window.callApi('deleteRecord', { data: { sheetName: state.selectedMonth, id: deleteId } });
         showToast('削除しました', 'success');
         await window.loadMonthRecords(state.selectedMonth, document.getElementById('recordsTitle').textContent);
         window.refreshBalance();
