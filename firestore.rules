@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 【注意】現在はFirebase Authentication（認証）が実装されていないため、
+    // データの「型」を検証することで最低限の保護を行います。
+    // 将来的に認証機能を導入し、アクセス制御を強化することを推奨します。
+
+    // 取引データ（transactions コレクション）
+    match /transactions/{transactionId} {
+      allow read: if true;
+      allow create, update: if 
+        request.resource.data.year is number &&
+        request.resource.data.month is string &&
+        request.resource.data.day is number &&
+        request.resource.data.category is string &&
+        request.resource.data.income is number &&
+        request.resource.data.expense is number &&
+        // note と timestamp は任意項目（存在する場合のみ型をチェック）
+        (!('note' in request.resource.data) || request.resource.data.note is string) &&
+        (!('timestamp' in request.resource.data) || request.resource.data.timestamp is timestamp);
+      allow delete: if true;
+    }
+
+    // 月次サマリー（summaries コレクション）
+    match /summaries/{monthId} {
+      allow read: if true;
+      allow write: if request.resource.data.openingBalance is number;
+    }
+
+    // 設定データ（settings コレクション）
+    // カテゴリ設定
+    match /settings/categories {
+      allow read: if true;
+      allow write: if request.resource.data.items is list;
+    }
+    // 金庫設定
+    match /settings/vault {
+      allow read: if true;
+      allow write: if request.resource.data.denominations is map;
+    }
+  }
+}
